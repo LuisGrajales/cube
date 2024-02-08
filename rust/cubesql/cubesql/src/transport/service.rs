@@ -399,6 +399,13 @@ impl SqlTemplates {
             .chain(projection.iter())
             .map(|c| c.clone())
             .collect::<Vec<_>>();
+        let limit_and_offset = self.render_template(
+            "clauses/limit_and_offset",
+            context! {
+                limit => limit,
+                offset => offset,
+            },
+        )?;
         self.render_template(
             "statements/select",
             context! {
@@ -409,8 +416,7 @@ impl SqlTemplates {
                 projection => projection,
                 order_by => order_by,
                 from_alias => alias,
-                limit => limit,
-                offset => offset,
+                limit_and_offset => limit_and_offset,
             },
         )
     }

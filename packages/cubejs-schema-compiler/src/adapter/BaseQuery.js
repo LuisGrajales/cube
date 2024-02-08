@@ -2500,7 +2500,10 @@ export class BaseQuery {
           'FROM (\n  {{ from }}\n) AS {{ from_alias }} \n' +
           '{% if group_by %} GROUP BY {{ group_by | map(attribute=\'index\') | join(\', \') }}{% endif %}' +
           '{% if order_by %} ORDER BY {{ order_by | map(attribute=\'expr\') | join(\', \') }}{% endif %}' +
-          '{% if limit %}\nLIMIT {{ limit }}{% endif %}' +
+          '{% if limit_and_offset %}{{ limit_and_offset }}{% endif %}',
+      },
+      clauses: {
+        limit_and_offset: '{% if limit %}\nLIMIT {{ limit }}{% endif %}' +
           '{% if offset %}\nOFFSET {{ offset }}{% endif %}',
       },
       expressions: {

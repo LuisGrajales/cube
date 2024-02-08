@@ -21260,4 +21260,53 @@ limit
 
         Ok(())
     }
+
+    #[tokio::test]
+    async fn test_athena_offset_limit_push_down() {
+        if !Rewriter::sql_push_down_enabled() {
+            return;
+        }
+        init_logger();
+
+        let query_plan = convert_select_to_query_plan_customized(
+            "
+            SELECT
+                SUM(s) AS s,
+                p AS p
+            FROM (
+                SELECT
+                    taxful_total_price AS p,
+                    CASE
+                        WHEN taxful_total_price = 1 THEN 0
+                        ELSE SUM(taxful_total_price)
+                    END AS s
+                FROM KibanaSampleDataEcommerce AS k
+                GROUP BY 1
+            ) AS t
+            GROUP BY 2
+            LIMIT 2
+            OFFSET 1
+            "
+            .to_string(),
+            DatabaseProtocol::PostgreSQL,
+            vec![
+                ("clauses/limit_and_offset".to_string(), "{% if offset %}\nOFFSET {{ offset }}{% endif %}{% if limit %}\nLIMIT {{ limit }}{% endif %}".to_string()),
+            ]
+        )
+        .await;
+
+        let physical_plan = query_plan.as_physical_plan().await.unwrap();
+        println!(
+            "Physical plan: {}",
+            displayable(physical_plan.as_ref()).indent()
+        );
+
+        let logical_plan = query_plan.as_logical_plan();
+        let sql = logical_plan
+            .find_cube_scan_wrapper()
+            .wrapped_sql
+            .unwrap()
+            .sql;
+        assert!(sql.contains("OFFSET 1\nLIMIT 2"));
+    }
 }

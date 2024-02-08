@@ -293,10 +293,10 @@ pub fn get_test_tenant_ctx_customized(custom_templates: Vec<(String, String)>) -
                         r#"SELECT {{ select_concat | map(attribute='aliased') | join(', ') }} 
   FROM ({{ from }}) AS {{ from_alias }} 
   {% if group_by %} GROUP BY {{ group_by | map(attribute='index') | join(', ') }}{% endif %}
-  {% if order_by %} ORDER BY {{ order_by | map(attribute='expr') | join(', ') }}{% endif %}{% if limit %}
-  LIMIT {{ limit }}{% endif %}{% if offset %}
-  OFFSET {{ offset }}{% endif %}"#.to_string(),
+  {% if order_by %} ORDER BY {{ order_by | map(attribute='expr') | join(', ') }}{% endif %}
+  {% if limit_and_offset %}{{ limit_and_offset }}{% endif %}"#.to_string(),
                     ),
+                    ("clauses/limit_and_offset".to_string(), "{% if limit %}\nLIMIT {{ limit }}{% endif %}{% if offset %}\nOFFSET {{ offset }}{% endif %}".to_string()),
                     (
                         "expressions/column_aliased".to_string(),
                         "{{expr}} {{quoted_alias}}".to_string(),
